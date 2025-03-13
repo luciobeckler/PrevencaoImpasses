@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
+using System.Text.RegularExpressions;
 
 namespace PrevencaoImpasses
 {
@@ -36,18 +36,62 @@ namespace PrevencaoImpasses
             _adjacencyList[from].Add(to);
         }
 
-        public void Display()
+        public void FindCycles()
         {
-            foreach (var vertex in _adjacencyList)
+            var visited = new HashSet<T>();
+            var stack = new HashSet<T>();
+            var path = new List<T>();
+            var printedCycles = new HashSet<string>();
+
+            foreach (var vertex in _adjacencyList.Keys)
             {
-                Console.Write(vertex.Key + " -> ");
-                Console.WriteLine(string.Join(", ", vertex.Value));
+                FindCyclesUtil(vertex, visited, stack, path, printedCycles);
             }
         }
 
-        public bool HasEdge(T from, T to)
+        private bool FindCyclesUtil(T current, HashSet<T> visited, HashSet<T> stack, List<T> path, HashSet<string> printedCycles)
         {
-            return _adjacencyList.ContainsKey(from) && _adjacencyList[from].Contains(to);
+            if (stack.Contains(current))
+            {
+                int index = path.IndexOf(current);
+                if (index != -1)
+                {
+                    var cycle = path.Skip(index).ToList();
+                    var processes = cycle.Where(x => x.ToString().StartsWith("P")).ToList();
+                    var resources = cycle.Where(x => x.ToString().StartsWith("R")).ToList();
+                    var formattedCycle = string.Join(" ", processes.Concat(resources));
+
+                    if (!printedCycles.Contains(formattedCycle))
+                    {
+                        printedCycles.Add(formattedCycle);
+                    }
+                }
+                return true;
+            }
+
+            if (visited.Contains(current))
+            {
+                return false;
+            }
+
+            visited.Add(current);
+            stack.Add(current);
+            path.Add(current);
+
+            if (_adjacencyList.ContainsKey(current))
+            {
+                foreach (var neighbor in _adjacencyList[current])
+                {
+                    if (FindCyclesUtil(neighbor, visited, stack, path, printedCycles))
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            stack.Remove(current);
+            path.Remove(current);
+            return false;
         }
     }
 }

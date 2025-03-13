@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.Text;
 using System.Text.RegularExpressions;
 
-string pasta = "C:\\Users\\lucio\\OneDrive\\Documentos\\Estudo\\IFMG\\SistemasOperacionais\\GerenciadorDeMemoria\\GerenciadorDeMemoria\\ArquivosTeste";
+string pasta = "C:\\Users\\lucio\\source\\repos\\PrevencaoImpasses\\PrevencaoImpasses\\ArquivosTeste";
 
 if (Directory.Exists(pasta))
 {
@@ -18,19 +18,12 @@ if (Directory.Exists(pasta))
         string content = File.ReadAllText(file);
         List<string> dados = content.Split(Environment.NewLine).ToList();
 
-        int numProcessos = int.Parse(dados[0]);
-        dados.RemoveAt(0);
-
-        int numRecursos = int.Parse(dados[0]);
         dados.RemoveAt(0);
 
         Console.WriteLine($"Processando arquivo: {file}");
 
         grafo = PopulaGrafo(dados);
-
-        
-
-
+        grafo.FindCycles();
     }
 }
 
@@ -63,7 +56,7 @@ List<Processo> GeraProcessos(List<string> dados)
 {
     List<Processo> processos = new List<Processo>();
 
-    for (int i = 0; i < dados.Count; i += 2)
+    for (int i = 0; i < dados.Count; i ++)
     {
         List<string> recursosAlocados = new List<string>();
         List<string> recursosSolicitados = new List<string>();
@@ -73,25 +66,29 @@ List<Processo> GeraProcessos(List<string> dados)
         string nomeProcesso = partes[0];
         partes.RemoveAt(0);
 
-        bool isRecurso = dados.ElementAt(0).Contains("R");
+        bool isRecurso = partes.ElementAt(0).Contains("R");
         while (isRecurso)
         {
             recursosAlocados.Add(partes.ElementAt(0));
             partes.RemoveAt(0);
 
-            isRecurso = dados.ElementAt(0).Contains("R");
+            isRecurso = partes.Count > 0 && partes.ElementAt(0).Contains("R");
         }
 
+        
+        dados.RemoveAt(0);
         //Segunda linha
-        partes.RemoveAt(0); //Remove nome do processo repetido
+        partes = Regex.Replace(dados[i], @"\s+", " ").Split(" ").ToList();
+        partes.RemoveAt(0);
 
         isRecurso = dados.ElementAt(0).Contains("R");
         while (isRecurso)
         {
+
             recursosSolicitados.Add(partes.ElementAt(0));
             partes.RemoveAt(0);
 
-            isRecurso = dados.ElementAt(0).Contains("R");
+            isRecurso = partes.Count > 0 && partes.ElementAt(0).Contains("R");
         }
 
         processos.Add(new Processo(nomeProcesso, recursosAlocados, recursosSolicitados));
