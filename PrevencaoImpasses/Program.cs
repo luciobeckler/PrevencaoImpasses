@@ -12,7 +12,7 @@ if (Directory.Exists(pasta))
     foreach (string file in files)
     {
 
-        DirectedGraph<string> grafo = new DirectedGraph<string>();
+        GrafoDirecionado<string> grafo = new GrafoDirecionado<string>();
 
         // Lê o conteúdo do arquivo
         string content = File.ReadAllText(file);
@@ -23,29 +23,42 @@ if (Directory.Exists(pasta))
         Console.WriteLine($"Processando arquivo: {file}");
 
         grafo = PopulaGrafo(dados);
-        grafo.FindCycles();
+
+        List<string> resultado = grafo.EncontraCiclos();
+
+        for (int i = 0; i < resultado.Count; i++)
+        {
+            List<string> auxiliar = resultado[i].Split(' ').ToList();
+
+            auxiliar.Sort();
+
+            resultado[i] = string.Join(" ", auxiliar);
+        }
+
+        foreach (var item in resultado)
+        {
+            Console.WriteLine(string.Join(" ", item));
+        }
     }
 }
 
-DirectedGraph<string> PopulaGrafo(List<string> dados)
+GrafoDirecionado<string> PopulaGrafo(List<string> dados)
 {
-    DirectedGraph<string> grafo = new DirectedGraph<string>();
+    GrafoDirecionado<string> grafo = new GrafoDirecionado<string>();
     List<Processo> processos = GeraProcessos(dados);
 
     foreach (var processo in processos)
     {
-        grafo.AddVertex(processo._nomeProcesso);
+        grafo.AdicionarVertice(processo._nomeProcesso);
 
         foreach (var recurso in processo._recursosAlocados)
         {
-            grafo.AddVertex(recurso);
-            grafo.AddEdge(recurso, processo._nomeProcesso);
+            grafo.AdicionarAresta(recurso, processo._nomeProcesso);
         }
 
         foreach (var recurso in processo._recursosSolicitados)
         {
-            grafo.AddVertex(recurso);
-            grafo.AddEdge(processo._nomeProcesso, recurso);
+            grafo.AdicionarAresta(processo._nomeProcesso, recurso);
         }
     }
 

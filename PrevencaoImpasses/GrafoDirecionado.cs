@@ -1,97 +1,107 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
 
 namespace PrevencaoImpasses
 {
-    public class DirectedGraph<T>
+    public class GrafoDirecionado<T>
     {
-        private readonly Dictionary<T, List<T>> _adjacencyList;
+        private readonly Dictionary<T, List<T>> _listaAdjacencia;
 
-        public DirectedGraph()
+        public GrafoDirecionado()
         {
-            _adjacencyList = new Dictionary<T, List<T>>();
+            _listaAdjacencia = new Dictionary<T, List<T>>();
         }
 
-        public void AddVertex(T vertex)
+        public void AdicionarVertice(T vertice)
         {
-            if (!_adjacencyList.ContainsKey(vertex))
+            if (!_listaAdjacencia.ContainsKey(vertice))
             {
-                _adjacencyList[vertex] = new List<T>();
+                _listaAdjacencia[vertice] = new List<T>();
             }
         }
 
-        public void AddEdge(T from, T to)
+        public void AdicionarAresta(T de, T para)
         {
-            if (!_adjacencyList.ContainsKey(from))
+            if (!_listaAdjacencia.ContainsKey(de))
             {
-                AddVertex(from);
+                AdicionarVertice(de);
             }
-            if (!_adjacencyList.ContainsKey(to))
+            if (!_listaAdjacencia.ContainsKey(para))
             {
-                AddVertex(to);
+                AdicionarVertice(para);
             }
-            _adjacencyList[from].Add(to);
+            _listaAdjacencia[de].Add(para);
         }
 
-        public void FindCycles()
+        public void Exibir()
         {
-            var visited = new HashSet<T>();
-            var stack = new HashSet<T>();
-            var path = new List<T>();
-            var printedCycles = new HashSet<string>();
-
-            foreach (var vertex in _adjacencyList.Keys)
+            foreach (var vertice in _listaAdjacencia)
             {
-                FindCyclesUtil(vertex, visited, stack, path, printedCycles);
+                Console.Write(vertice.Key + " -> ");
+                Console.WriteLine(string.Join(", ", vertice.Value));
             }
         }
 
-        private bool FindCyclesUtil(T current, HashSet<T> visited, HashSet<T> stack, List<T> path, HashSet<string> printedCycles)
+        public List<string> EncontraCiclos()
         {
-            if (stack.Contains(current))
+            var visitados = new HashSet<T>();
+            var pilha = new HashSet<T>();
+            var ciclos = new List<string>();
+
+            foreach (var vertice in _listaAdjacencia.Keys)
             {
-                int index = path.IndexOf(current);
+                var caminho = new List<T>();
+                if (EncontraCiclosUtil(vertice, visitados, pilha, caminho, ciclos))
+                {
+                    continue;
+                }
+            }
+
+            return ciclos;
+        }
+
+        private bool EncontraCiclosUtil(T vertice, HashSet<T> visitados, HashSet<T> pilha, List<T> caminho, List<string> ciclos)
+        {
+            if (pilha.Contains(vertice))
+            {
+                int index = caminho.IndexOf(vertice);
                 if (index != -1)
                 {
-                    var cycle = path.Skip(index).ToList();
-                    var processes = cycle.Where(x => x.ToString().StartsWith("P")).ToList();
-                    var resources = cycle.Where(x => x.ToString().StartsWith("R")).ToList();
-                    var formattedCycle = string.Join(" ", processes.Concat(resources));
-
-                    if (!printedCycles.Contains(formattedCycle))
-                    {
-                        printedCycles.Add(formattedCycle);
-                    }
+                    var ciclo = caminho.GetRange(index, caminho.Count - index);
+                    ciclos.Add(string.Join(" ", ciclo));
                 }
                 return true;
             }
 
-            if (visited.Contains(current))
+            if (visitados.Contains(vertice))
             {
                 return false;
             }
 
-            visited.Add(current);
-            stack.Add(current);
-            path.Add(current);
+            visitados.Add(vertice);
+            pilha.Add(vertice);
+            caminho.Add(vertice);
 
-            if (_adjacencyList.ContainsKey(current))
+            if (_listaAdjacencia.ContainsKey(vertice))
             {
-                foreach (var neighbor in _adjacencyList[current])
+                foreach (var vizinho in _listaAdjacencia[vertice])
                 {
-                    if (FindCyclesUtil(neighbor, visited, stack, path, printedCycles))
+                    if (EncontraCiclosUtil(vizinho, visitados, pilha, caminho, ciclos))
                     {
                         return true;
                     }
                 }
             }
 
-            stack.Remove(current);
-            path.Remove(current);
+            pilha.Remove(vertice);
+            caminho.RemoveAt(caminho.Count - 1);
+
             return false;
+        }
+
+        public bool TemAresta(T de, T para)
+        {
+            return _listaAdjacencia.ContainsKey(de) && _listaAdjacencia[de].Contains(para);
         }
     }
 }
