@@ -1,6 +1,4 @@
 ﻿using PrevencaoImpasses;
-using System.Diagnostics;
-using System.Text;
 using System.Text.RegularExpressions;
 
 string pasta = "C:\\Users\\lucio\\source\\repos\\PrevencaoImpasses\\PrevencaoImpasses\\ArquivosTeste";
@@ -35,10 +33,16 @@ if (Directory.Exists(pasta))
             resultado[i] = string.Join(" ", auxiliar);
         }
 
-        foreach (var item in resultado)
+        string outputFileName = Path.Combine(pasta, $"TESTE{Path.GetFileNameWithoutExtension(file).Substring(5)}-RESULTADO.txt");
+
+        using (StreamWriter sw = new StreamWriter(outputFileName))
         {
-            Console.WriteLine(string.Join(" ", item));
+            foreach (var item in resultado)
+            {
+                sw.WriteLine(item);
+            }
         }
+
     }
 }
 
@@ -92,9 +96,11 @@ List<Processo> GeraProcessos(List<string> dados)
         dados.RemoveAt(0);
         //Segunda linha
         partes = Regex.Replace(dados[i], @"\s+", " ").Split(" ").ToList();
-        partes.RemoveAt(0);
+        
+        if(partes.Count > 1)
+            partes.RemoveAt(0);
 
-        isRecurso = dados.ElementAt(0).Contains("R");
+        isRecurso = partes.ElementAt(0).Contains("R");
         while (isRecurso)
         {
 
