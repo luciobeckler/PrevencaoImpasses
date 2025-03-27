@@ -1,7 +1,7 @@
 ﻿using PrevencaoImpasses;
 using System.Text.RegularExpressions;
 
-string pasta = "C:\\Users\\lucio\\source\\repos\\PrevencaoImpasses\\PrevencaoImpasses\\ArquivosTeste";
+string pasta = "D:\\";
 
 if (Directory.Exists(pasta))
 {
@@ -9,7 +9,6 @@ if (Directory.Exists(pasta))
 
     foreach (string file in files)
     {
-
         GrafoDirecionado<string> grafo = new GrafoDirecionado<string>();
 
         // Lê o conteúdo do arquivo
@@ -17,19 +16,15 @@ if (Directory.Exists(pasta))
         List<string> dados = content.Split(Environment.NewLine).ToList();
 
         dados.RemoveAt(0);
-
         Console.WriteLine($"Processando arquivo: {file}");
 
         grafo = PopulaGrafo(dados);
-
         List<string> resultado = grafo.EncontraCiclos();
 
         for (int i = 0; i < resultado.Count; i++)
         {
             List<string> auxiliar = resultado[i].Split(' ').ToList();
-
             auxiliar.Sort();
-
             resultado[i] = string.Join(" ", auxiliar);
         }
 
@@ -42,7 +37,6 @@ if (Directory.Exists(pasta))
                 sw.WriteLine(item);
             }
         }
-
     }
 }
 
@@ -65,7 +59,6 @@ GrafoDirecionado<string> PopulaGrafo(List<string> dados)
             grafo.AdicionarAresta(processo._nomeProcesso, recurso);
         }
     }
-
     return grafo;
 }
 
@@ -73,41 +66,41 @@ List<Processo> GeraProcessos(List<string> dados)
 {
     List<Processo> processos = new List<Processo>();
 
-    for (int i = 0; i < dados.Count; i ++)
+    while (dados.Count > 0)
     {
         List<string> recursosAlocados = new List<string>();
         List<string> recursosSolicitados = new List<string>();
-        List<string> partes = Regex.Replace(dados[i], @"\s+", " ").Split(" ").ToList(); // Normaliza os tipos de espaços, necessário pois podem haver espaços inquebráveis que devem ser substituidos por espaços normais.
 
-        //Primeira linha
+        if (string.IsNullOrWhiteSpace(dados[0]))
+        {
+            dados.RemoveAt(0);
+            continue;
+        }
+
+        List<string> partes = Regex.Replace(dados[0], @"\s+", " ").Trim().Split(" ").ToList();
         string nomeProcesso = partes[0];
         partes.RemoveAt(0);
 
-        bool isRecurso = partes.ElementAt(0).Contains("R");
-        while (isRecurso)
+        while (partes.Count > 0 && partes[0].Contains("R"))
         {
-            recursosAlocados.Add(partes.ElementAt(0));
+            recursosAlocados.Add(partes[0]);
             partes.RemoveAt(0);
-
-            isRecurso = partes.Count > 0 && partes.ElementAt(0).Contains("R");
         }
 
-        
         dados.RemoveAt(0);
-        //Segunda linha
-        partes = Regex.Replace(dados[i], @"\s+", " ").Split(" ").ToList();
-        
-        if(partes.Count > 1)
-            partes.RemoveAt(0);
 
-        isRecurso = partes.ElementAt(0).Contains("R");
-        while (isRecurso)
+        if (dados.Count > 0 && !string.IsNullOrWhiteSpace(dados[0]))
         {
+            partes = Regex.Replace(dados[0], @"\s+", " ").Trim().Split(" ").ToList();
+            if (partes.Count > 1)
+                partes.RemoveAt(0);
 
-            recursosSolicitados.Add(partes.ElementAt(0));
-            partes.RemoveAt(0);
-
-            isRecurso = partes.Count > 0 && partes.ElementAt(0).Contains("R");
+            while (partes.Count > 0 && partes[0].Contains("R"))
+            {
+                recursosSolicitados.Add(partes[0]);
+                partes.RemoveAt(0);
+            }
+            dados.RemoveAt(0);
         }
 
         processos.Add(new Processo(nomeProcesso, recursosAlocados, recursosSolicitados));
